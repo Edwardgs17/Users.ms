@@ -1,0 +1,54 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: ${TEAM_NAME}-${SERVICE_NAME}
+spec:
+  selector:
+    app: ${TEAM_NAME}-${SERVICE_NAME}
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 3000
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${TEAM_NAME}-${SERVICE_NAME}
+  labels:
+    app: ${TEAM_NAME}-${SERVICE_NAME}
+spec:
+  replicas: 1 
+  selector:
+    matchLabels:
+      app: ${TEAM_NAME}-${SERVICE_NAME}
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: ${TEAM_NAME}-${SERVICE_NAME}
+        tier: backend
+        team: ${TEAM_NAME}
+    spec:
+      containers:
+      - name: ${TEAM_NAME}-${SERVICE_NAME}
+        image: gcr.io/${GOOGLE_PROJECT_ID}/${CIRCLE_PROJECT_REPONAME}:${CIRCLE_SHA1}
+        env:
+        - name: DB_HOST
+          value: ${DB_HOST_VAR}
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_NAME
+          value: ${TEAM_NAME}_${SERVICE_NAME}
+        - name: DB_USER
+          value: "postgres"    
+        - name: DB_PASS
+          value: ${DB_PASS_VAR}
+        - name: MICROSERVICE_URL
+          value: ${INTERNAL_MICROSERVICES}/${TEAM_NAME}
+        - name: PORT
+          value: "3000"
+        ports:
+        - name: http
+          containerPort: 3000
+          protocol: TCP

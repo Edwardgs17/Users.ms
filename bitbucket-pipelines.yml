@@ -1,0 +1,22 @@
+image: 'node:10-stretch'
+pipelines:
+  default:
+    - step:
+        caches:
+          - node
+        script:
+          - npm install
+          - ./node_modules/.bin/knex migrate:latest
+          - ./node_modules/eslint/bin/eslint.js .
+          - ./node_modules/nyc/bin/nyc.js npm test
+          - ./node_modules/nyc/bin/nyc.js check-coverage
+        services:
+          - postgres
+definitions:
+  services:
+    postgres:
+      image: postgres
+      environment:
+        POSTGRES_USER: 'foo'
+        POSTGRES_PASSWORD: 'secret'
+        POSTGRES_DB: 'users'
